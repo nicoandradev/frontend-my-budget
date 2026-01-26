@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { setToken } from '../services/auth.service';
 import { apiBaseUrl } from '../config/api.config';
-import './Register.css';
+import './Login.css';
 
-function Register() {
+function ResetPassword() {
   const [searchParams] = useSearchParams();
   const tokenFromUrl = searchParams.get('token');
 
-  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
@@ -25,21 +23,20 @@ function Register() {
     }
 
     if (!tokenFromUrl) {
-      setError('Token de invitación no encontrado');
+      setError('Token no encontrado');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/register`, {
+      const response = await fetch(`${apiBaseUrl}/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           token: tokenFromUrl,
-          name,
           password,
           passwordConfirm,
         }),
@@ -48,13 +45,12 @@ function Register() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Error al registrar usuario');
+        setError(data.error || 'Error al restablecer contraseña');
         setIsLoading(false);
         return;
       }
 
-      setToken(data.token);
-      navigate('/dashboard');
+      navigate('/login', { state: { message: 'Contraseña actualizada correctamente' }, replace: true });
     } catch {
       setError('Error de conexión. Verifica que el servidor esté ejecutándose.');
       setIsLoading(false);
@@ -63,8 +59,8 @@ function Register() {
 
   if (!tokenFromUrl) {
     return (
-      <div className="register-container">
-        <div className="register-content">
+      <div className="login-container">
+        <div className="login-content">
           <div className="logo-container">
             <div className="logo-icon">
               <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -80,10 +76,13 @@ function Register() {
             </div>
             <h1 className="logo-text">BudgetApp</h1>
           </div>
-          <p className="register-no-token-message">
-            Necesitas un enlace de invitación válido para registrarte.
+          <p className="reset-invalid-message">
+            Enlace inválido o expirado. Solicita uno nuevo desde la pantalla de recuperación.
           </p>
-          <Link to="/login" className="login-link">
+          <Link to="/forgot-password" className="forgot-password-link">
+            Solicitar nuevo enlace
+          </Link>
+          <Link to="/login" className="forgot-password-link">
             Volver al inicio de sesión
           </Link>
         </div>
@@ -92,8 +91,8 @@ function Register() {
   }
 
   return (
-    <div className="register-container">
-      <div className="register-content">
+    <div className="login-container">
+      <div className="login-content">
         <div className="logo-container">
           <div className="logo-icon">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -110,28 +109,16 @@ function Register() {
           <h1 className="logo-text">BudgetApp</h1>
         </div>
 
-        <form className="register-form" onSubmit={handleSubmit}>
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="name" className="form-label">Nombre</label>
-            <input
-              id="name"
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Contraseña</label>
+            <label htmlFor="password" className="form-label">Nueva contraseña</label>
             <input
               id="password"
               type="password"
               className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoFocus
               required
             />
           </div>
@@ -156,19 +143,19 @@ function Register() {
 
           <button
             type="submit"
-            className="register-button"
+            className="login-button"
             disabled={isLoading}
           >
-            {isLoading ? 'Registrando...' : 'Registrarse'}
+            {isLoading ? 'Guardando...' : 'Restablecer contraseña'}
           </button>
         </form>
 
-        <Link to="/login" className="login-link">
-          ¿Ya tienes una cuenta? Inicia sesión
+        <Link to="/login" className="forgot-password-link">
+          Volver al inicio de sesión
         </Link>
       </div>
     </div>
   );
 }
 
-export default Register;
+export default ResetPassword;

@@ -5,10 +5,12 @@ import { createIncome, listIncomes, updateIncome, deleteIncome } from '../servic
 import type { Income, CreateIncomeRequest, UpdateIncomeRequest } from '../services/income.service';
 import { getFinancialSummary } from '../services/summary.service';
 import type { FinancialSummary } from '../services/summary.service';
+import { isAdmin } from '../services/auth.service';
+import Profiles from './Profiles';
 import './Dashboard.css';
 
 type TransactionType = 'expense' | 'income';
-type ViewType = 'register' | 'records';
+type ViewType = 'register' | 'records' | 'profiles';
 
 const categories = [
   'Deporte',
@@ -129,7 +131,7 @@ function Dashboard() {
         const incomeData: CreateIncomeRequest = {
           merchant,
           amount: numericAmount,
-          category,
+          category: 'Ingreso', // Valor por defecto para ingresos
           date,
         };
 
@@ -376,6 +378,19 @@ function Dashboard() {
             </svg>
             <span>Registros</span>
           </button>
+          
+          {isAdmin() && (
+            <button
+              className={`nav-link ${currentView === 'profiles' ? 'active' : ''}`}
+              onClick={() => setCurrentView('profiles')}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>Perfiles</span>
+            </button>
+          )}
         </nav>
       </aside>
 
@@ -393,14 +408,20 @@ function Dashboard() {
                 <button
                   type="button"
                   className={`type-button ${transactionType === 'expense' ? 'active' : ''}`}
-                  onClick={() => setTransactionType('expense')}
+                  onClick={() => {
+                    setTransactionType('expense');
+                    setCategory(''); // Limpiar categoría al cambiar a gasto
+                  }}
                 >
                   Gasto
                 </button>
                 <button
                   type="button"
                   className={`type-button ${transactionType === 'income' ? 'active' : ''}`}
-                  onClick={() => setTransactionType('income')}
+                  onClick={() => {
+                    setTransactionType('income');
+                    setCategory(''); // Limpiar categoría al cambiar a ingreso
+                  }}
                 >
                   Ingreso
                 </button>
@@ -433,23 +454,25 @@ function Dashboard() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="category" className="form-label">Categoría</label>
-                  <select
-                    id="category"
-                    className="form-input form-select"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
-                  >
-                    <option value="">Selecciona una categoría</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {transactionType === 'expense' && (
+                  <div className="form-group">
+                    <label htmlFor="category" className="form-label">Categoría</label>
+                    <select
+                      id="category"
+                      className="form-input form-select"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecciona una categoría</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label htmlFor="date" className="form-label">Fecha</label>
@@ -615,6 +638,10 @@ function Dashboard() {
             </div>
           )}
 
+          {currentView === 'profiles' && (
+            <Profiles />
+          )}
+
           {editingTransaction && (
             <div className="modal-overlay" onClick={handleCancelEdit}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -646,23 +673,25 @@ function Dashboard() {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="edit-category" className="form-label">Categoría</label>
-                    <select
-                      id="edit-category"
-                      className="form-input form-select"
-                      value={editingTransaction.category}
-                      onChange={(e) => handleEditFieldChange('category', e.target.value)}
-                      required
-                    >
-                      <option value="">Selecciona una categoría</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {editingTransaction.type === 'expense' && (
+                    <div className="form-group">
+                      <label htmlFor="edit-category" className="form-label">Categoría</label>
+                      <select
+                        id="edit-category"
+                        className="form-input form-select"
+                        value={editingTransaction.category}
+                        onChange={(e) => handleEditFieldChange('category', e.target.value)}
+                        required
+                      >
+                        <option value="">Selecciona una categoría</option>
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label htmlFor="edit-date" className="form-label">Fecha</label>

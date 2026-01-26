@@ -1,6 +1,5 @@
 import { getToken } from './auth.service';
-
-const apiBaseUrl = 'http://localhost:3000';
+import { apiBaseUrl } from '../config/api.config';
 
 export interface Expense {
   id: string;
