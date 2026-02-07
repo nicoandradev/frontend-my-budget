@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createExpense, listExpenses, updateExpense, deleteExpense } from '../services/expense.service';
 import type { CreateExpenseRequest, Expense, UpdateExpenseRequest } from '../services/expense.service';
 import { createIncome, listIncomes, updateIncome, deleteIncome } from '../services/income.service';
 import type { Income, CreateIncomeRequest, UpdateIncomeRequest } from '../services/income.service';
 import { getFinancialSummary } from '../services/summary.service';
 import type { FinancialSummary } from '../services/summary.service';
-import { isAdmin } from '../services/auth.service';
+import { isAdmin, removeToken } from '../services/auth.service';
 import Profiles from './Profiles';
+import MiPerfil from './MiPerfil';
 import './Dashboard.css';
 
 type TransactionType = 'expense' | 'income';
-type ViewType = 'register' | 'records' | 'profiles';
+type ViewType = 'register' | 'records' | 'profiles' | 'miPerfil';
 
 const categories = [
   'Deporte',
@@ -28,6 +30,7 @@ const categories = [
 ] as const;
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<ViewType>('register');
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [merchant, setMerchant] = useState('');
@@ -379,6 +382,17 @@ function Dashboard() {
             <span>Registros</span>
           </button>
           
+          <button
+            className={`nav-link ${currentView === 'miPerfil' ? 'active' : ''}`}
+            onClick={() => setCurrentView('miPerfil')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Mi Perfil</span>
+          </button>
+          
           {isAdmin() && (
             <button
               className={`nav-link ${currentView === 'profiles' ? 'active' : ''}`}
@@ -391,6 +405,21 @@ function Dashboard() {
               <span>Perfiles</span>
             </button>
           )}
+
+          <button
+            className="nav-link nav-link-logout"
+            onClick={() => {
+              removeToken();
+              navigate('/login', { replace: true });
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Cerrar sesión</span>
+          </button>
         </nav>
       </aside>
 
@@ -636,6 +665,10 @@ function Dashboard() {
                 </div>
               )}
             </div>
+          )}
+
+          {currentView === 'miPerfil' && (
+            <MiPerfil />
           )}
 
           {currentView === 'profiles' && (
