@@ -333,6 +333,7 @@
 
 .record-details {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -342,6 +343,9 @@
   font-weight: 600;
   color: #333;
   font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .record-meta {
@@ -349,14 +353,21 @@
   gap: 1rem;
   font-size: 0.875rem;
   color: #666;
+  flex-wrap: nowrap;
 }
 
 .record-category {
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .record-date {
   color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .record-amount {
@@ -497,5 +508,123 @@
 .cancel-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* --- Mobile: hamburger menu --- */
+.hamburger-button {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1002;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  background: rgba(26, 35, 50, 0.95);
+  color: white;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.hamburger-button:hover {
+  background: rgba(40, 50, 70, 0.95);
+}
+
+.hamburger-button:active {
+  transform: scale(0.96);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  .hamburger-button {
+    display: flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1001;
+    width: 280px;
+    max-width: 85vw;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .dashboard-main {
+    padding: 1rem;
+    padding-top: 4.5rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.75rem;
+  }
+
+  .records-container {
+    padding: 1rem;
+  }
+
+  .record-item {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .record-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .record-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .record-merchant {
+    font-size: 0.9375rem;
+  }
+
+  .record-meta {
+    font-size: 0.8125rem;
+    gap: 0.5rem;
+  }
+
+  .record-amount {
+    font-size: 1.0625rem;
+  }
+
+  .record-actions {
+    gap: 0.25rem;
+  }
+
+  .action-button {
+    padding: 0.4rem;
+  }
+
+  .action-button svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 

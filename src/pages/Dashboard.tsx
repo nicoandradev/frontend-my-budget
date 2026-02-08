@@ -55,6 +55,7 @@ function Dashboard() {
   const [editingTransaction, setEditingTransaction] = useState<{ type: TransactionType; id: string; merchant: string; amount: number; category: string; date: string } | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editAmountDisplay, setEditAmountDisplay] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getCurrentDate = (): string => {
     const today = new Date();
@@ -90,6 +91,14 @@ function Dashboard() {
       return () => clearTimeout(timer);
     }
   }, [success]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const loadAllData = async () => {
     setIsLoadingExpenses(true);
@@ -345,9 +354,44 @@ function Dashboard() {
     }
   };
 
+  const setViewAndCloseMobileMenu = (view: ViewType) => {
+    setCurrentView(view);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="dashboard-container">
-      <aside className="sidebar">
+      <button
+        type="button"
+        className="hamburger-button"
+        onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+        aria-expanded={isMobileMenuOpen}
+      >
+        {isMobileMenuOpen ? (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        )}
+      </button>
+
+      {isMobileMenuOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsMobileMenuOpen(false)}
+          role="presentation"
+          aria-hidden
+        />
+      )}
+
+      <aside className={`sidebar ${isMobileMenuOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-logo">
           <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M30 20L70 20L80 35L80 80L20 80L20 35Z" fill="url(#logoGradient)" stroke="white" strokeWidth="2"/>
@@ -364,7 +408,7 @@ function Dashboard() {
         <nav className="sidebar-nav">
           <button
             className={`nav-link ${currentView === 'register' ? 'active' : ''}`}
-            onClick={() => setCurrentView('register')}
+            onClick={() => setViewAndCloseMobileMenu('register')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 5v14M5 12h14"/>
@@ -374,7 +418,7 @@ function Dashboard() {
           
           <button
             className={`nav-link ${currentView === 'records' ? 'active' : ''}`}
-            onClick={() => setCurrentView('records')}
+            onClick={() => setViewAndCloseMobileMenu('records')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
@@ -384,7 +428,7 @@ function Dashboard() {
           
           <button
             className={`nav-link ${currentView === 'miPerfil' ? 'active' : ''}`}
-            onClick={() => setCurrentView('miPerfil')}
+            onClick={() => setViewAndCloseMobileMenu('miPerfil')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -396,7 +440,7 @@ function Dashboard() {
           {isAdmin() && (
             <button
               className={`nav-link ${currentView === 'profiles' ? 'active' : ''}`}
-              onClick={() => setCurrentView('profiles')}
+              onClick={() => setViewAndCloseMobileMenu('profiles')}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -409,6 +453,7 @@ function Dashboard() {
           <button
             className="nav-link nav-link-logout"
             onClick={() => {
+              setIsMobileMenuOpen(false);
               removeToken();
               navigate('/login', { replace: true });
             }}
@@ -617,7 +662,9 @@ function Dashboard() {
                         </svg>
                       </div>
                       <div className="record-details">
-                        <div className="record-merchant">{transaction.merchant}</div>
+                        <div className="record-merchant" title={transaction.merchant}>
+                          {transaction.merchant}
+                        </div>
                         <div className="record-meta">
                           <span className="record-category">{transaction.category}</span>
                           <span className="record-date">{formatDate(transaction.date)}</span>
