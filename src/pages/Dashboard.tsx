@@ -50,12 +50,14 @@ function Dashboard() {
   const [isLoadingIncomes, setIsLoadingIncomes] = useState(false);
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState<number | null>(() => now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(() => now.getMonth() + 1);
   const [editingTransaction, setEditingTransaction] = useState<{ type: TransactionType; id: string; merchant: string; amount: number; category: string; date: string } | null>(null);
   const [editAmount, setEditAmount] = useState('');
   const [editAmountDisplay, setEditAmountDisplay] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   const getCurrentDate = (): string => {
     const today = new Date();
@@ -303,6 +305,53 @@ function Dashboard() {
       await loadAllData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar el registro');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const transactionKey = (type: TransactionType, id: string) => `${type}-${id}`;
+
+  const toggleSelection = (key: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const keys = allTransactions.map((t) => transactionKey(t.type, t.id));
+    setSelectedIds(new Set(keys));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleDeleteSelected = async () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    if (!confirm(`¿Estás seguro de que quieres eliminar ${count} registro(s)?`)) {
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const deletes = Array.from(selectedIds).map((key) => {
+        const dashIndex = key.indexOf('-');
+        const type = key.slice(0, dashIndex) as TransactionType;
+        const id = key.slice(dashIndex + 1);
+        return type === 'income' ? deleteIncome(id) : deleteExpense(id);
+      });
+      await Promise.all(deletes);
+
+      setSelectedIds(new Set());
+      setSuccess(`${count} registro(s) eliminado(s) exitosamente`);
+      await loadAllData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar los registros');
     } finally {
       setIsLoading(false);
     }
@@ -653,9 +702,49 @@ function Dashboard() {
               ) : allTransactions.length === 0 ? (
                 <div className="empty-message">No hay registros disponibles</div>
               ) : (
-                <div className="records-list">
-                  {allTransactions.map((transaction) => (
-                    <div key={`${transaction.type}-${transaction.id}`} className="record-item">
+                <>
+                  <div className="records-selection-bar">
+                    <div className="records-selection-links">
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={selectAll}
+                      >
+                        Seleccionar todos
+                      </button>
+                      <span className="separator">|</span>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={clearSelection}
+                      >
+                        Deseleccionar todos
+                      </button>
+                    </div>
+                    {selectedIds.size > 0 && (
+                      <button
+                        type="button"
+                        className="delete-selected-button"
+                        onClick={handleDeleteSelected}
+                        disabled={isLoading}
+                      >
+                        Eliminar seleccionados ({selectedIds.size})
+                      </button>
+                    )}
+                  </div>
+                  <div className="records-list">
+                  {allTransactions.map((transaction) => {
+                    const key = transactionKey(transaction.type, transaction.id);
+                    const isSelected = selectedIds.has(key);
+                    return (
+                    <div key={key} className={`record-item ${isSelected ? 'record-item-selected' : ''}`}>
+                      <label className="record-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelection(key)}
+                        />
+                      </label>
                       <div className="record-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -696,8 +785,10 @@ function Dashboard() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
+                </>
               )}
               
               {error && currentView === 'records' && (
