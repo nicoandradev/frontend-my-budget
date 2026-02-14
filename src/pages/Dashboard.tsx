@@ -9,10 +9,11 @@ import type { FinancialSummary } from '../services/summary.service';
 import { isAdmin, removeToken } from '../services/auth.service';
 import Profiles from './Profiles';
 import MiPerfil from './MiPerfil';
+import BankEmailsConfig from './BankEmailsConfig';
 import './Dashboard.css';
 
 type TransactionType = 'expense' | 'income';
-type ViewType = 'register' | 'records' | 'profiles' | 'miPerfil';
+type ViewType = 'register' | 'records' | 'profiles' | 'miPerfil' | 'bankEmails';
 
 const categories = [
   'Deporte',
@@ -487,16 +488,28 @@ function Dashboard() {
           </button>
           
           {isAdmin() && (
-            <button
-              className={`nav-link ${currentView === 'profiles' ? 'active' : ''}`}
-              onClick={() => setViewAndCloseMobileMenu('profiles')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span>Perfiles</span>
-            </button>
+            <>
+              <button
+                className={`nav-link ${currentView === 'profiles' ? 'active' : ''}`}
+                onClick={() => setViewAndCloseMobileMenu('profiles')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Perfiles</span>
+              </button>
+              <button
+                className={`nav-link ${currentView === 'bankEmails' ? 'active' : ''}`}
+                onClick={() => setViewAndCloseMobileMenu('bankEmails')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>Correos bancarios</span>
+              </button>
+            </>
           )}
 
           <button
@@ -811,6 +824,10 @@ function Dashboard() {
 
           {currentView === 'profiles' && (
             <Profiles />
+          )}
+
+          {currentView === 'bankEmails' && (
+            <BankEmailsConfig />
           )}
 
           {editingTransaction && (
